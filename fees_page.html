@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Online Pay Fees - VCE</title>
+  <link rel="shortcut icon" href="image/favicon.ico" type="image/svg+xml">
+  <link rel="stylesheet" href="css/fees_style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+</head>
+<body>
+  <section class="header">
+    <nav>
+      <a href="index.html"><img src="image/logo.png" id="logo-img" alt="VCE Logo"></a>
+      <div class="nav-links" id="navLinks">
+        <span class="icon" onclick="hidemenu()">&#10005;</span>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="Admission_page.html">Admission</a></li>
+          <li><a href="index.html#course_call">Course</a></li>
+          <li><a href="fees_page.html">Fees</a></li>
+          <li><a href="Contact_page.html">Contact</a></li>
+        </ul>
+      </div> 
+      <span class="icon" onclick="showmenu()">&#9776;</span>
+    </nav>
+
+    <div class="wrapper">
+      <div class="r_form_wrap">
+        <div class="title">
+          <p id="header_fees">Online Pay Fees</p>
+        </div>
+
+        <div class="r_form">
+          <form id="feesForm">
+            <div class="input_wrap">
+              <label for="email">Registered Email</label>
+              <div class="input_item">
+                <i class="fa fa-envelope" id="icon"></i>
+                <input type="email" id="email" class="input" placeholder="Enter registered email" required>
+              </div>
+              <input type="button" class="button" value="Fetch Details" id="fetchBtn">
+            </div>
+
+            <div class="input_wrap">
+              <label>Student Name</label>
+              <div class="input_item">
+                <i class="fa fa-user" id="icon"></i>
+                <p id="studentName" class="input"></p>
+              </div>
+            </div>
+
+            <div class="input_wrap">
+              <label>Course</label>
+              <div class="input_item">
+                <i class="fa fa-book" id="icon"></i>
+                <p id="studentCourse" class="input"></p>
+              </div>
+            </div>
+
+            <div class="input_wrap" id="pendingFeesDiv" style="display: none;">
+              <label>Pending Fees</label>
+              <div class="input_item">
+                <i class="fa fa-credit-card" id="icon"></i>
+                <p id="pendingFees" class="input"></p>
+              </div>
+            </div>
+
+            <input type="submit" class="button" value="Pay Fees">
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="none_div"></div>
+
+  <!-- ✅ Firebase Script -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    // ✅ Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyC3T3QDSzHmAM__CfhSjwQ7q254z0Dqpgw",
+      authDomain: "vardhaman-website.firebaseapp.com",
+      projectId: "vardhaman-website",
+      storageBucket: "vardhaman-website.appspot.com",
+      messagingSenderId: "705351076523",
+      appId: "1:705351076523:web:24c7c10c6d765f7635c5ee",
+      measurementId: "G-2GQJYG50QQ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const fetchBtn = document.getElementById("fetchBtn");
+    const studentName = document.getElementById("studentName");
+    const studentCourse = document.getElementById("studentCourse");
+    const pendingFees = document.getElementById("pendingFees");
+    const pendingFeesDiv = document.getElementById("pendingFeesDiv");
+
+    // ✅ Fetch details from Firestore
+    fetchBtn.addEventListener("click", async () => {
+      const email = document.getElementById("email").value.trim();
+
+      if (!email) {
+        alert("⚠️ Please enter your registered email.");
+        return;
+      }
+
+      try {
+        const q = query(collection(db, "admissions"), where("email", "==", email));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+          studentName.textContent = "Not Found";
+          studentCourse.textContent = "-";
+          pendingFeesDiv.style.display = "none";
+          alert("❌ No admission record found for this email.");
+        } else {
+          querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            studentName.textContent = data.name || "N/A";
+            studentCourse.textContent = data.course || "N/A";
+            pendingFees.textContent = data.pendingFees
+              ? `₹ ${data.pendingFees}`
+              : "₹ 25,000";
+            pendingFeesDiv.style.display = "block"; // Show after fetching
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        alert("⚠️ Failed to fetch student details. Check console for details.");
+      }
+    });
+
+    // ✅ Form Submit (simulate payment)
+    const form = document.getElementById("feesForm");
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      if (studentName.textContent === "" || studentName.textContent === "Not Found") {
+        alert("⚠️ Please fetch your details first!");
+        return;
+      }
+
+      alert(`✅ Payment initiated for ${studentName.textContent}.`);
+      form.reset();
+      studentName.textContent = "";
+      studentCourse.textContent = "";
+      pendingFees.textContent = "";
+      pendingFeesDiv.style.display = "none";
+    });
+  </script>
+
+  <!-- ✅ Navbar Script -->
+  <script>
+    var navLinks = document.getElementById("navLinks");
+    function showmenu() { navLinks.style.right = "0"; }   
+    function hidemenu() { navLinks.style.right = "-200px"; }
+  </script>
+
+</body>
+</html>
